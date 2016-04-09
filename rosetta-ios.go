@@ -1,15 +1,14 @@
-
 package main
 
 import (
 	"fmt"
-	"github.com/tealeg/xlsx"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
-)
 
+	"github.com/tealeg/xlsx"
+)
 
 func main() {
 	toLocalize(os.Args)
@@ -62,15 +61,16 @@ func toLocalize(args []string) {
 		if cellNumber > 0 {
 			// create directory first
 			var path = ""
+			var cellContent, _ = cell.String()
 			if outputDir == "" {
-				if cell.String() != "" {
-					path = cell.String() + ".lproj"
+				if cellContent != "" {
+					path = cellContent + ".lproj"
 				} else {
 					path = "Base.lproj"
 				}
 			} else {
-				if cell.String() != "" {
-					path = strings.Join([]string{outputDir, cell.String() + ".lproj"}, pathSeparator)
+				if cellContent != "" {
+					path = strings.Join([]string{outputDir, cellContent + ".lproj"}, pathSeparator)
 				} else {
 					path = strings.Join([]string{outputDir, "Base.lproj"}, pathSeparator)
 				}
@@ -79,7 +79,7 @@ func toLocalize(args []string) {
 			os.Mkdir(path, 0777)
 
 			// insert the language code into the array
-			languages = append(languages, cell.String())
+			languages = append(languages, cellContent)
 		} else {
 			continue
 		}
@@ -93,8 +93,9 @@ func toLocalize(args []string) {
 		for cellNumber, cell := range row.Cells {
 			// first colomn is for available languages
 			if rowNumber > 0 {
+				var cellContent, _ = cell.String()
 				if cellNumber == 0 {
-					stringKey = append(stringKey, cell.String())
+					stringKey = append(stringKey, cellContent)
 				} else {
 					continue
 				}
@@ -110,11 +111,10 @@ func toLocalize(args []string) {
 		for rowNumber, row := range sheet.Rows {
 			for cellNumber, cell := range row.Cells {
 				if rowNumber > 0 {
-					if cellNumber == languageIndex+1 {
+					var cellContent, _ = cell.String()
+					if (cellNumber == languageIndex+1) && (cellContent != "") {
 						name := stringKey[rowNumber-1]
-						stringContent = stringContent +"\"" + name + "\" = \"" + cell.String() + "\";\n\n"
-						fmt.Printf(" [%s] => [%s]", name, cell)
-						fmt.Println("")
+						stringContent = stringContent + "\"" + name + "\" = \"" + cellContent + "\";\n\n"
 					} else {
 						continue
 					}
@@ -124,8 +124,8 @@ func toLocalize(args []string) {
 
 			}
 		}
-		
-		fmt.Println("%s", stringContent)
+
+		// fmt.Println(stringContent)
 
 		outputFilename := "Localizable.strings"
 		var langDirectory string
